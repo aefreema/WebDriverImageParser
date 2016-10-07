@@ -11,13 +11,18 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
 public class ImageParseTest {
@@ -60,6 +65,7 @@ public class ImageParseTest {
         }
     }
 
+    //using old method
     @Test
     public void saveImage() throws InterruptedException, AWTException{
         if (driver == null){
@@ -103,19 +109,12 @@ public class ImageParseTest {
         imgDriver.quit();
     }
 
-    //Timing issue, only downloading every other image. WebDriver not waiting for Windows save process to finish.
-    //Adding a Thread.sleep() does not help, imgDriver moves on to next image while previous one saving, so every other
-    //image is skipped.
+    //Add check for valid url
     @Test
-    public void saveAllImagesOnPage() throws AWTException, InterruptedException{
+    public void saveAllImagesOnPage() throws MalformedURLException, IOException{
         if (driver == null){
             setup();
         }
-
-        //setup driver, action for right click, robot to interact with Windows' dialog box
-        WebDriver imgDriver = new ChromeDriver();
-        Actions action = new Actions(imgDriver);
-        Robot robot = new Robot();
 
         //find all images on page
         java.util.List<WebElement> imgList = driver.findElements(By.className("bbc_img"));
@@ -123,35 +122,13 @@ public class ImageParseTest {
             //get image url and image name
             String src = imgElement.getAttribute("src");
             String name = imgElement.getAttribute("alt");
+            String type = name.substring(name.indexOf(".") + 1);
 
-            //navigate to image url
-            imgDriver.get(src);
-
-            //check if page has a valid image
-            if (imgDriver.findElements(By.tagName("img")).size() != 0) {
-                //Store save file location in clipboard
-                String location = "C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name;
-                StringSelection stringSelection = new StringSelection(location);
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
-
-                WebElement imgPg = imgDriver.findElement(By.tagName("img"));
-
-                //Right click and select save as
-                action.contextClick(imgPg).build().perform();
-                action.sendKeys(Keys.CONTROL, "s").build().perform();
-
-                //paste in save folder location and save
-                robot.keyPress(KeyEvent.VK_CONTROL);
-                robot.keyPress(KeyEvent.VK_V);
-                robot.keyRelease(KeyEvent.VK_V);
-                robot.keyRelease(KeyEvent.VK_CONTROL);
-                robot.keyPress(KeyEvent.VK_ENTER);
-                robot.keyRelease(KeyEvent.VK_ENTER);
-                //Thread.sleep(3000);
-            }
+            //read image into a BufferedImage and write to file
+            URL url = new URL(src);
+            BufferedImage img = ImageIO.read(url);
+            ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name));
         }
-        //close driver
-        imgDriver.quit();
     }
 
     @Test

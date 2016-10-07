@@ -1,34 +1,37 @@
 /*
-* Currently only traverses pages.
-* For current image downloading code see test/java/imageParseTest saveAllImagesOnPage()
+* Traverses web forums downloading all images posted to the forums.
+*
+* Working on:
+* Handling urls without a valid image. Currently catching exception and doing nothing to move onto next image.
+* Slow and not the bad use of exceptions. Working on a better way.
 * */
 
+//import org.apache.commons.validator.routines.UrlValidator;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.interactions.Actions;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.script.ScriptException;
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 import java.util.Vector;
 
 
 public class ImageParser {
     private Vector<SearchElement> elem = null;
 
-    public void parseImagesInChrome() {
+    public void parseImagesInChrome() throws MalformedURLException, IOException{
         //Set up webdriver
         System.setProperty("webdriver.chrome.driver", "C:\\Includes\\chromedriver.exe");
         WebDriver driver = new ChromeDriver();
@@ -46,15 +49,35 @@ public class ImageParser {
             String loc = se.getLoc();
 
             //used to check for a next page
-            boolean hasNext = false;
+            boolean hasNext;
 
             //navigate forum pages
             do {
                //locate images
-               //List<WebElement> imgList = driver.findElements(By.className("bbc_img"));
-               //for (WebElement imgElement: imgList){
-                   //download image: see test/java/ImageParseTest saveAllImagesOnPage() for current code
-               //}
+               List<WebElement> imgList = driver.findElements(By.className("bbc_img"));
+               for (WebElement imgElement: imgList){
+                   String src = imgElement.getAttribute("src");
+                   String name = imgElement.getAttribute("alt");
+                   String type = name.substring(name.indexOf(".") + 1);
+
+                   //Check for valid url
+                   /*UrlValidator uv = new UrlValidator();
+                   if (uv.isValid(src)) {
+                       URL url = new URL(src);
+                       BufferedImage img = ImageIO.read(url);
+                       ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name));
+                   }*/
+
+                   //download image
+                   //find a way to check for valid image on page
+                   try {
+                       URL url = new URL(src);
+                       BufferedImage img = ImageIO.read(url);
+                       ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd" + loc + "\\" + name));
+                   } catch (Exception e){
+                       //Do nothing, move on to next url
+                   }
+               }
 
                //if a link to next page exists, click link, otherwise, at last page, break
                if(driver.findElements(By.className("next")).size() != 0){
@@ -70,8 +93,7 @@ public class ImageParser {
             } while(hasNext);
         }
 
-        //close drivers
-        //imgDriver.quit();
+        //close driver
         driver.quit();
     }
 
@@ -105,7 +127,7 @@ public class ImageParser {
         }
     }
 
-    public void saveImage(WebDriver imgDriver, Actions action, Robot robot, String name, String src, String loc) {
+    /*public void saveImage(WebDriver imgDriver, Actions action, Robot robot, String name, String src, String loc) {
         //open new browser window
         imgDriver.get(src);
 
@@ -129,6 +151,6 @@ public class ImageParser {
             robot.keyPress(KeyEvent.VK_ENTER);
             robot.keyRelease(KeyEvent.VK_ENTER);
         }
-    }
+    }*/
 
 }
