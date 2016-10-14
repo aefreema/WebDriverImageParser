@@ -6,7 +6,6 @@
 * Slow and not the bad use of exceptions. Working on a better way.
 * */
 
-//import org.apache.commons.validator.routines.UrlValidator;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.w3c.dom.Document;
@@ -31,10 +30,11 @@ import java.util.Vector;
 public class ImageParser {
     private Vector<SearchElement> elem = null;
 
-    public void parseImagesInChrome() throws MalformedURLException, IOException{
+    public void parseImagesInChrome() throws IOException{
         //Set up webdriver
         System.setProperty("webdriver.chrome.driver", "C:\\Includes\\chromedriver.exe");
         WebDriver driver = new ChromeDriver();
+        WebDriver imgDriver = new ChromeDriver();
 
         //extract urls and save folder locations from XML
         try {
@@ -60,22 +60,15 @@ public class ImageParser {
                    String name = imgElement.getAttribute("alt");
                    String type = name.substring(name.indexOf(".") + 1);
 
-                   //Check for valid url
-                   /*UrlValidator uv = new UrlValidator();
-                   if (uv.isValid(src)) {
+                   //Check for valid image url
+                   imgDriver.get(src);
+                   if ((imgDriver.findElements(By.tagName("img")).size() == 1)
+                           && (imgDriver.findElement(By.tagName("img")).getAttribute("src").equals(src))
+                           && (imgDriver.findElements(By.tagName("title")).size() != 0)) {
+                       //read image into a BufferedImage and write to file
                        URL url = new URL(src);
                        BufferedImage img = ImageIO.read(url);
-                       ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name));
-                   }*/
-
-                   //download image
-                   //find a way to check for valid image on page
-                   try {
-                       URL url = new URL(src);
-                       BufferedImage img = ImageIO.read(url);
-                       ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd" + loc + "\\" + name));
-                   } catch (Exception e){
-                       //Do nothing, move on to next url
+                       ImageIO.write(img, type, new File("..\\..\\Pictures\\snsd\\" + loc + "\\" + name));
                    }
                }
 
@@ -94,11 +87,12 @@ public class ImageParser {
         }
 
         //close driver
+        imgDriver.quit();
         driver.quit();
     }
 
     public void getURLS() throws ParserConfigurationException, IOException, SAXException {
-        elem = new Vector<SearchElement>();
+        elem = new Vector<>();
 
         try {
             //Store XML contents in Document
@@ -126,31 +120,4 @@ public class ImageParser {
             System.err.println(e.getMessage());
         }
     }
-
-    /*public void saveImage(WebDriver imgDriver, Actions action, Robot robot, String name, String src, String loc) {
-        //open new browser window
-        imgDriver.get(src);
-
-        //Store save file location in clipboard
-        String location = "C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name;
-        StringSelection stringSelection = new StringSelection(location);
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, stringSelection);
-
-        if (imgDriver.findElements(By.tagName("img")).size() != 0) {
-            WebElement imgPg = imgDriver.findElement(By.tagName("img"));
-
-            //Right click and select save as
-            action.contextClick(imgPg).build().perform();
-            action.sendKeys(Keys.CONTROL, "s").build().perform();
-
-            //paste in save folder location and save
-            robot.keyPress(KeyEvent.VK_CONTROL);
-            robot.keyPress(KeyEvent.VK_V);
-            robot.keyRelease(KeyEvent.VK_V);
-            robot.keyRelease(KeyEvent.VK_CONTROL);
-            robot.keyPress(KeyEvent.VK_ENTER);
-            robot.keyRelease(KeyEvent.VK_ENTER);
-        }
-    }*/
-
 }

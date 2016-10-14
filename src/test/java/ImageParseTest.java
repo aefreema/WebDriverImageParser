@@ -111,10 +111,11 @@ public class ImageParseTest {
 
     //Add check for valid url
     @Test
-    public void saveAllImagesOnPage() throws MalformedURLException, IOException{
+    public void saveAllImagesOnPage() throws IOException{
         if (driver == null){
             setup();
         }
+        WebDriver imgDriver = new ChromeDriver();
 
         //find all images on page
         java.util.List<WebElement> imgList = driver.findElements(By.className("bbc_img"));
@@ -124,10 +125,16 @@ public class ImageParseTest {
             String name = imgElement.getAttribute("alt");
             String type = name.substring(name.indexOf(".") + 1);
 
-            //read image into a BufferedImage and write to file
-            URL url = new URL(src);
-            BufferedImage img = ImageIO.read(url);
-            ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name));
+            //Check for valid image url
+            imgDriver.get(src);
+            if ((imgDriver.findElements(By.tagName("img")).size() == 1) &&
+                    (imgDriver.findElement(By.tagName("img")).getAttribute("src").equals(src)) &&
+                    (imgDriver.findElements(By.tagName("title")).size() != 0)) {
+                //read image into a BufferedImage and write to file
+                URL url = new URL(src);
+                BufferedImage img = ImageIO.read(url);
+                ImageIO.write(img, type, new File("C:\\Users\\aefre\\Pictures\\snsd\\" + loc + "\\" + name));
+            }
         }
     }
 
