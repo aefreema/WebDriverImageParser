@@ -2,8 +2,7 @@
 * Traverses web forums downloading all images posted to the forums.
 *
 * Working on:
-* Handling urls without a valid image. Currently catching exception and doing nothing to move onto next image.
-* Slow and not the bad use of exceptions. Working on a better way.
+* Handling urls without a valid image more quickly.
 * */
 
 import org.openqa.selenium.*;
